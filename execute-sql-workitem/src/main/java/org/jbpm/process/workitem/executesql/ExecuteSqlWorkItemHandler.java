@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import com.myspace.medicalclaimstest.*;
 
 import org.jbpm.process.workitem.core.AbstractLogOrThrowWorkItemHandler;
 import org.jbpm.process.workitem.core.util.RequiredParameterValidator;
@@ -52,7 +53,7 @@ import org.slf4j.LoggerFactory;
         parameters = {
                 @WidParameter(name = "SQLStatement", required = true),
                 @WidParameter(name = "MaxResults"),
-                @WidParameter(name = "ColumnSeparator")
+                @WidParameter(name = "ResultClass"),
         },
         results = {
                 @WidResult(name = "Result", runtimeType = "java.lang.Object")
@@ -101,10 +102,10 @@ public class ExecuteSqlWorkItemHandler extends AbstractLogOrThrowWorkItemHandler
             Map<String, Object> results = new HashMap<>();
             String sqlStatement = (String) workItem.getParameter("SQLStatement");
             String maxResultsInput = (String) workItem.getParameter("MaxResults");
-            String columnSeparatorInput = (String) workItem.getParameter("ColumnSeparator");
+            String resultClass = (String) workItem.getParameter("ResultClass");
 
             maxResults = maxResultsInput != null && !maxResultsInput.trim().isEmpty() ? Integer.parseInt(maxResultsInput) : DEFAULT_MAX_RESULTS;
-            columnSeparator = columnSeparatorInput != null && !columnSeparatorInput.isEmpty() ? columnSeparatorInput : DEFAULT_COLUMN_SEPARATOR;
+            //columnSeparator = columnSeparatorInput != null && !columnSeparatorInput.isEmpty() ? columnSeparatorInput : DEFAULT_COLUMN_SEPARATOR;
 
             List<String> lines = new ArrayList<>();
             try {
@@ -115,7 +116,8 @@ public class ExecuteSqlWorkItemHandler extends AbstractLogOrThrowWorkItemHandler
 		boolean containsResultSet = statement.execute();
 		if(containsResultSet){
                 	resultSet = statement.getResultSet();
-                	results.put(RESULT,processResults(resultSet));
+                	System.out.println("result set: "+resultSet + " ResultClass = "+resultClass);
+                	processResults(resultSet,resultClass,results);
 		}else{
 			results.put(RESULT,statement.getUpdateCount());
 		}
@@ -142,19 +144,72 @@ public class ExecuteSqlWorkItemHandler extends AbstractLogOrThrowWorkItemHandler
     }
 
     // overwrite to implement custom resultset processing
-    protected Object processResults(ResultSet resultSet) throws Exception {
-        List<String> lines = new ArrayList<>();
+    protected void processResults(ResultSet resultSet,String resultClass,Map<String, Object> results) throws Exception {
+    	System.out.println("inside the function processResults" + " ResultClass= "+resultClass);
+		if (resultClass.equals("com.myspace.medicalclaimstest.coverageHolder")) {
+			while (resultSet.next()) {
+				System.out.println("inside the while clause");
 
-        while (resultSet.next()) {
-            int columnCount = resultSet.getMetaData().getColumnCount();
-            List<String> values = new ArrayList<>();
-            for (int i = 0; i < columnCount; i++) {
-                values.add(resultSet.getString(i + 1));
-            }
-            lines.add(values.stream().collect(Collectors.joining(columnSeparator)));
-        }
+				coverageHolder ch = new coverageHolder();
+				ch.setChSSN(resultSet.getString("ssn"));
+				ch.setChFirstName(resultSet.getString("first_name"));
 
-        return lines;
+				ch.setChLastName(resultSet.getString("last_name"));
+				employerGroup eg = new employerGroup();
+
+				eg.setGroupName(resultSet.getString("group_name"));
+
+				eg.setGroupNumber(resultSet.getString("group_number"));
+
+				eg.setGroupStatus(resultSet.getString("group_status"));
+				ch.setChGroup(eg);
+
+				ch.setChEmail(resultSet.getString("email_address"));
+
+				ch.setChInitCovDt(resultSet.getDate("coverage_dt"));
+
+				ch.setChMedAuth(resultSet.getBoolean("med_auth"));
+				results.put(RESULT, ch);
+			}
+		}
+        
+		if (resultClass.equals("com.myspace.medicalclaimstest.chCoverages")) {
+			System.out.println("inside the if clause");
+
+			List<chCoverages> Coverages = new ArrayList<chCoverages>();
+
+			while (resultSet.next()) {
+				System.out.println("inside the while clause");
+
+				chCoverages ch = new chCoverages();
+				ch.setCovEffectiveDate(resultSet.getDate("effectiveDate"));
+				System.out.println("coverageHolder: " + ch.getCovEffectiveDate());
+
+				ch.setCoverageProduct(resultSet.getString("product"));
+				System.out.println("coverageHolder: " + ch.getCoverageProduct());
+
+				ch.setCoverageStatus(resultSet.getString("status"));
+				System.out.println("coverageHolder: " + ch.getCoverageStatus());
+
+				Coverages.add(ch);
+				System.out.println(ch);
+
+			}
+			results.put(RESULT, Coverages);
+
+		}
+       
+//
+//        while (resultSet.next()) {
+//            int columnCount = resultSet.getMetaData().getColumnCount();
+//            List<String> values = new ArrayList<>();
+//            for (int i = 0; i < columnCount; i++) {
+//                values.add(resultSet.getString(i + 1));
+//            }
+//            lines.add(values.stream().collect(Collectors.joining(columnSeparator)));
+//        }
+//
+//        return lines;
     }
 
     public void abortWorkItem(WorkItem workItem,

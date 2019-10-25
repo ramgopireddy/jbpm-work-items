@@ -61,7 +61,7 @@ public class ExecuteSqlWorkItemHandlerTest {
         }
     }
 
-    @Test
+    //@Test
     public void testFetchAllRows() throws Exception {
         TestWorkItemManager manager = new TestWorkItemManager();
         WorkItemImpl workItem = new WorkItemImpl();
@@ -84,7 +84,7 @@ public class ExecuteSqlWorkItemHandlerTest {
                      resultLines.size());
     }
 
-    @Test
+    //@Test
     public void testFetchSpecificRow() throws Exception {
         TestWorkItemManager manager = new TestWorkItemManager();
         WorkItemImpl workItem = new WorkItemImpl();
@@ -107,7 +107,7 @@ public class ExecuteSqlWorkItemHandlerTest {
                      resultLines.get(0));
     }
 
-    @Test
+   // @Test
     public void testNoResults() throws Exception {
         TestWorkItemManager manager = new TestWorkItemManager();
         WorkItemImpl workItem = new WorkItemImpl();
@@ -127,7 +127,7 @@ public class ExecuteSqlWorkItemHandlerTest {
                      resultLines.size());
     }
 
-    @Test
+    //@Test
     public void testUpdate() throws Exception {
         TestWorkItemManager manager = new TestWorkItemManager();
         WorkItemImpl workItem = new WorkItemImpl();

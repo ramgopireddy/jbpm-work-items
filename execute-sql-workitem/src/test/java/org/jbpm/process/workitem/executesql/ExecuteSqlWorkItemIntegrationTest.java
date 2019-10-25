@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 
 public class ExecuteSqlWorkItemIntegrationTest {
 
-    @Test
+   // @Test
     public void testWorkitemValidity() {
         String repoPath = "file://" + System.getProperty("builddir") +
                 "/" + System.getProperty("artifactId") + "-" +
